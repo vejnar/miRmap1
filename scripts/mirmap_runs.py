@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import argparse
@@ -21,7 +21,7 @@ def predict_on_mim(args):
         mimset.exe_path = shared.exe_path
     mimset.find_potential_targets_with_seed()
     if len(mimset.end_sites) > 0:
-        shared.logger.debug('Evaluating mirna:%s transcript:%s'%(mirna[0], transcript[0]))
+        shared.logger.debug(f'Evaluating mirna:{mirna[0]} transcript:{transcript[0]}')
         # De novo features
         mimset.eval_tgs_au()
         mimset.eval_tgs_position()
@@ -36,11 +36,12 @@ def predict_on_mim(args):
         mimset.cons_blss = [0.] * len(mimset.end_sites)
         mimset.selec_phylops = [1.] * len(mimset.end_sites)
         if hasattr(shared, 'aln_path'):
-            aln_fname = os.path.join(shared.aln_path, '%s.fa'%(transcript[0]))
+            aln_fname = os.path.join(shared.aln_path, f'{transcript[0]}.fa')
             if os.path.exists(aln_fname):
                 if shared.mod_path:
-                    mod_fname = os.path.join(shared.mod_path, '%s.mod'%(transcript[0]))
+                    mod_fname = os.path.join(shared.mod_path, f'{transcript[0]}.mod')
                     if os.path.exists(mod_fname):
+                        print(mod_fname)
                         with open(mod_fname) as modf:
                             mod = modf.read()
                             start = mod.find('TREE: ') + 6
@@ -56,6 +57,17 @@ def predict_on_mim(args):
             return mirna[0], transcript[0], mimset.end_sites, mimset.seed_lengths, mimset.nb_mismatches_except_gu_wobbles, mimset.nb_gu_wobbles, mimset.tgs_au, mimset.tgs_position, mimset.tgs_pairing3p, mimset.tgs_score, mimset.dg_duplex, mimset.dg_binding, mimset.dg_duplex_seed, mimset.dg_binding_seed, mimset.dg_open, mimset.dg_total, mimset.prob_exact, mimset.prob_binomial, mimset.cons_bls, mimset.selec_phylop, mimset.score
         else:
             return mirna[0], transcript[0], mimset.end_sites, mimset.seed_lengths, mimset.nb_mismatches_except_gu_wobbles, mimset.nb_gu_wobbles, mimset.tgs_aus, mimset.tgs_positions, mimset.tgs_pairing3ps, mimset.tgs_scores, mimset.dg_duplexs, mimset.dg_bindings, mimset.dg_duplex_seeds, mimset.dg_binding_seeds, mimset.dg_opens, mimset.dg_totals, mimset.prob_exacts, mimset.prob_binomials, mimset.cons_blss, mimset.selec_phylops, mimset.scores
+
+def format_number(v):
+    if isinstance(v, int):
+        return str(v)
+    else:
+        s1 = str(v)
+        s2 = f'{v:.8}'
+        if len(s1) < len(s2):
+            return s1
+        else:
+            return s2
 
 def main(argv=None):
     # Parameters
@@ -90,7 +102,7 @@ def main(argv=None):
     except ImportError:
         import logging as logger
     shared.logger = logger
-    logger.debug('Starting on %s'%(socket.gethostname()))
+    logger.debug(f'Starting on {socket.gethostname()}')
 
     # Paths
     if args.aln_path:
@@ -155,7 +167,7 @@ def main(argv=None):
                 transcripts[args.transcript_ids[i]] = args.transcript_seqs[i]
         else:
             transcripts = dict(zip(range(1, len(args.transcript_seqs)+1), args.transcript_seqs))
-    logger.info('Starting predictions with %i miRNA(s) and %i transcript(s)'%(len(mirnas), len(transcripts)))
+    logger.info(f'Starting predictions with {len(mirnas)} miRNA(s) and {len(transcripts)} transcript(s)')
 
     # Predictions
     if args.num_worker > 1:
@@ -173,20 +185,19 @@ def main(argv=None):
     for mim in tsp_results:
         if mim is not None:
             if args.combine:
-                outf.write('\t'.join([str(mim[0]), str(mim[1]), ','.join(map(str, mim[2])), ','.join(map(str, mim[3])), ','.join(map(str, mim[4])), ','.join(map(str, mim[5]))] + map(str, mim[6:])) + '\n')
+                outf.write('\t'.join([str(mim[0]), str(mim[1]), ','.join(map(str, mim[2])), ','.join(map(str, mim[3])), ','.join(map(str, mim[4])), ','.join(map(str, mim[5]))] + list(map(str, mim[6:]))) + '\n')
             else:
-                feats = zip(*mim[2:])
-                for imim in range(len(mim[2])):
+                for isite, site in enumerate(zip(*mim[2:])):
+                    fields = [str(mim[0]), str(mim[1])]
                     if args.site_id:
-                        fields = [str(i) for i in [mim[0], mim[1], imim+1] + list(feats[imim])]
-                    else:
-                        fields = [str(i) for i in [mim[0], mim[1]] + list(feats[imim])]
+                        fields.append(str(isite+1))
+                    fields.extend([format_number(v) for v in site])
                     outf.write('\t'.join(fields) + '\n')
     outf.close()
 
     # End
     if len(mirnas) == 1:
-        logger.info('Predictions ready for miRNA %s'%(mirnas.keys()[0]))
+        logger.info(f'Predictions ready for miRNA {list(mirnas.keys())[0]}')
     else:
         logger.info('Predictions ready')
 

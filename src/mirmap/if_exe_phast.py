@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -49,7 +49,7 @@ class Phast(object):
             aln_file.flush()
             cmd.append(aln_file.name)
         # Executing program
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempfile.gettempdir())
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=tempfile.gettempdir())
         stdout, stderr = p.communicate()
         if tree_file is not None:
             tree_file.close()
@@ -86,7 +86,7 @@ class Phast(object):
             aln_file.flush()
             cmd.append(aln_file.name)
         # Executing programs
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempfile.gettempdir())
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=tempfile.gettempdir())
         stdout, stderr = p.communicate()
         if aln_file is not None:
             aln_file.close()

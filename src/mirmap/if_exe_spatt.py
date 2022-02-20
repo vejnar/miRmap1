@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -37,7 +37,7 @@ class Spatt(object):
         cmd.append('--Markov')
         cmd.append(markovf.name)
         # Executing program
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=tempfile.gettempdir())
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True, cwd=tempfile.gettempdir())
         stdout, stderr = p.communicate()
         markovf.close()
         # Parsing results

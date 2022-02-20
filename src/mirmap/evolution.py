@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -48,9 +48,10 @@ def find_all(s, sub, indices=None, offset=None):
 def remove_gap_column(aln):
     clean_aln = copy.copy(aln)
     keep_cols = []
-    for i in range(len(aln.values()[0])):
+    alns = list(aln.values())
+    for i in range(len(alns[0])):
         only_gap = True
-        for seq in aln.values():
+        for seq in alns:
             if seq[i] != '-':
                 only_gap = False
                 continue
@@ -233,7 +234,7 @@ class mmEvolution(seed.mmSeed):
         for seq_name, seq in seqs.items():
             seqs_cleaned[seq_name] = utils.clean_seq(seq, aln_alphabet)
             seqs_coords[seq_name] = get_coord_vec(seq, aln_alphabet)
-        ref_species = seqs.keys()[0]
+        ref_species = list(seqs.keys())[0]
         # Reset
         self.selec_phylops = []
         # Compute
@@ -246,7 +247,7 @@ class mmEvolution(seed.mmSeed):
             # Species with seed(s)
             species_with_seed = []
             for seq_name, seq in seqs_cleaned.items():
-                if seq.find(motif) != -1:
+                if seq.upper().find(motif) != -1:
                     species_with_seed.append(seq_name)
             # phyloP
             pval = 1.0

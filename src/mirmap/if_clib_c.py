@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -37,7 +37,7 @@ class LibC(object):
         self._library.free(pointer)
 
     def fopen(self, path, mode):
-        return self._library.fopen(path, mode)
+        return self._library.fopen(path.encode('utf-8'), mode.encode('ascii'))
 
     def fclose(self, fp):
         return self._library.fclose(fp)
@@ -74,7 +74,7 @@ class InMemoryFile(object):
         self._buf = c_char_p()
         self._buf_len = c_size_t()
         self._file = self._libc.open_memstream(byref(self._buf), byref(self._buf_len))
-        self._libc.fprintf(self._file, '%s', stream)
+        self._libc.fprintf(self._file, b'%s', stream.encode('ascii'))
 
     def close(self):
         self._libc.fclose(self._file)

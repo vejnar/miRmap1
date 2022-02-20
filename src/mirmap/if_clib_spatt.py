@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -40,4 +40,4 @@ class Spatt(object):
 
     def get_exact_prob(self, motif, nobs, length_seq, alphabet, transitions, markov_order, direction):
         ctransitions = self.transitions_l2c(utils.flatten(transitions))
-        return self._library.spatt_exact(''.join(alphabet), motif, cast(ctransitions, POINTER(c_double)), markov_order, False, nobs, length_seq, direction)
+        return self._library.spatt_exact(''.join(alphabet).encode('ascii'), motif.encode('ascii'), cast(ctransitions, POINTER(c_double)), markov_order, False, nobs, length_seq, direction.encode('ascii'))

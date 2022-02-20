@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -72,28 +72,28 @@ class RNAvienna(object):
         self._library.init_co_pf_fold.restype = None
 
     def lfold(self, seq, struc_buffer, maxdist):
-        return self._library.Lfold(seq, struc_buffer, maxdist)
+        return self._library.Lfold(seq.encode('ascii'), struc_buffer, maxdist)
 
     def duplexfold(self, seq1, seq2):
-        return self._library.duplexfold(seq1, seq2)
+        return self._library.duplexfold(seq1.encode('ascii'), seq2.encode('ascii'))
 
     def init_pf_fold(self, length):
         self._library.init_pf_fold(length)
 
     def pf_fold(self, seq, struc_buffer):
-        return self._library.pf_fold(seq, struc_buffer)
+        return self._library.pf_fold(seq.encode('ascii'), struc_buffer)
 
     def pfl_fold(self, seq, size_window, size_max_interact, size_free, ener_cutoff):
         pup = cast(self.space((len(seq)+1)*sizeof(c_double)), POINTER(c_double))
         if size_free > 0:
             pup[0] = size_free
-        return self._library.pfl_fold(seq, size_window, size_max_interact, ener_cutoff, pup)
+        return self._library.pfl_fold(seq.encode('ascii'), size_window, size_max_interact, ener_cutoff, pup)
 
     def pfl_fold_with_pup(self, seq, size_window, size_max_interact, size_free, ener_cutoff):
         pup = cast(self.space((len(seq)+1)*sizeof(c_double)), POINTER(c_double))
         if size_free > 0:
             pup[0] = size_free
-        pl = self._library.pfl_fold(seq, size_window, size_max_interact, ener_cutoff, pup)
+        pl = self._library.pfl_fold(seq.encode('ascii'), size_window, size_max_interact, ener_cutoff, pup)
         return pup, pl
 
     def free_pf_arrays(self):
@@ -103,13 +103,13 @@ class RNAvienna(object):
         self._library.free_co_pf_arrays()
 
     def pf_unstru(self, seq, length):
-        return self._library.pf_unstru(seq, length)
+        return self._library.pf_unstru(seq.encode('ascii'), length)
 
     def init_co_pf_fold(self, length):
         self._library.init_co_pf_fold(length)
 
     def co_pf_fold(self, seq, struc_buffer):
-        return self._library.co_pf_fold(seq, struc_buffer)
+        return self._library.co_pf_fold(seq.encode('ascii'), struc_buffer)
 
     def set_temperature(self, temperature):
         c_double.in_dll(self._library, 'temperature').value = temperature
@@ -151,19 +151,19 @@ class RNAvienna(object):
         struc_buffer = self.get_string_buffer(len(seq) + 1)
         if constraints is not None:
             self.set_fold_constrained(1)
-            struc_buffer.value = constraints
+            struc_buffer.value = constraints.encode('ascii')
         # Folding
         result = {}
-        result['mfe'] = self._library.fold(seq, struc_buffer)
+        result['mfe'] = self._library.fold(seq.encode('ascii'), struc_buffer)
         result['mfe_structure'] = struc_buffer.value
         # Partition function
         if partfunc:
             self._library.init_pf_fold(len(seq))
             if constraints is not None:
-                struc_buffer.value = constraints
+                struc_buffer.value = constraints.encode('ascii')
             else:
                 struc_buffer = self.get_string_buffer(len(seq) + 1)
-            pffold = self._library.pf_fold(seq, struc_buffer)
+            pffold = self._library.pf_fold(seq.encode('ascii'), struc_buffer)
             self._library.free_pf_arrays()
             kT = ((temperature + 273.15) * 1.98717) / 1000.
             result['efe_structure'] = struc_buffer.value
@@ -178,23 +178,23 @@ class RNAvienna(object):
         struc_buffer = self.get_string_buffer(len(seq1) + len(seq2) + 1)
         if constraints is not None:
             self.set_fold_constrained(1)
-            struc_buffer.value = constraints
+            struc_buffer.value = constraints.encode('ascii')
         # Set cut-point
         cut_point = len(seq1) + 1
         self.set_cut_point(cut_point)
         # Folding
         result = {}
-        result['mfe'] = self._library.cofold(seq1+seq2, struc_buffer)
-        result['mfe_structure'] = struc_buffer.value[:cut_point-1] + '&' + struc_buffer.value[cut_point-1:]
+        result['mfe'] = self._library.cofold(seq1.encode('ascii')+seq2.encode('ascii'), struc_buffer)
+        result['mfe_structure'] = struc_buffer.value[:cut_point-1] + b'&' + struc_buffer.value[cut_point-1:]
         # Partition function
         if partfunc:
             self._library.init_co_pf_fold(len(seq1) + len(seq2))
             if constraints is not None:
-                struc_buffer.value = constraints
-            pffold = self._library.co_pf_fold(seq1+seq2, struc_buffer)
+                struc_buffer.value = constraints.encode('ascii')
+            pffold = self._library.co_pf_fold((seq1+seq2).encode('ascii'), struc_buffer)
             self._library.free_co_pf_arrays()
             kT = ((temperature + 273.15) * 1.98717) / 1000.
-            result['efe_structure'] = struc_buffer.value[:cut_point-1] + '&' + struc_buffer.value[cut_point-1:]
+            result['efe_structure'] = struc_buffer.value[:cut_point-1] + b'&' + struc_buffer.value[cut_point-1:]
             result['efe'] = pffold.FAB
             result['mfe_frequency'] = math.exp((pffold.FAB - result['mfe']) / kT)
             result['efe_binding'] = pffold.FcAB - pffold.FA - pffold.FB

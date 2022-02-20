@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -16,7 +16,7 @@ import string
 def grouper(n, iterable, fillvalue=None):
     """http://docs.python.org/library/itertools.html#recipes"""
     args = [iter(iterable)] * n
-    return itertools.izip_longest(fillvalue=fillvalue, *args)
+    return itertools.zip_longest(fillvalue=fillvalue, *args)
 
 def flatten(l1d):
     return list(itertools.chain.from_iterable(l1d))
@@ -54,11 +54,9 @@ def load_fasta(fasta, as_string=None, upper=False):
     return seqs
 
 def reverse_complement(seq):
-    """Returns the reverse complement sequence. New string object.
-    (Adapted from BioPython)"""
+    """Returns the reverse complement sequence. New string object."""
     if 'U' in seq or 'u' in seq:
-        ttable = string.maketrans("ACGUacgu", "UGCAugca")
+        ttable = str.maketrans("ACGUacgu", "UGCAugca")
     else:
-        ttable = string.maketrans("ACGTacgt", "TGCAtgca")
-    seq = seq[-1::-1].translate(ttable)
-    return seq
+        ttable = str.maketrans("ACGTacgt", "TGCAtgca")
+    return seq[::-1].translate(ttable)

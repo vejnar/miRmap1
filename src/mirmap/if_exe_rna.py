@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -46,7 +46,7 @@ class RNAvienna(object):
         if temperature is not None:
             cmd.append('--temp='+str(temperature))
         # Executing program
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=tempfile.gettempdir())
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, cwd=tempfile.gettempdir())
         stdout, stderr = p.communicate('\n'.join(['&'.join(seqs), constraints]))
         # Parsing results
         decoded = re.match(regex, stdout)

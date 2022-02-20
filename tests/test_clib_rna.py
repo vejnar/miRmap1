@@ -13,4 +13,4 @@ class TestRNAvienna(unittest.TestCase):
         struc_buffer = lib.get_string_buffer(len(seq))
         result = lib.pf_fold(seq, struc_buffer)
         lib.free_pf_arrays()
-        self.assertAlmostEqual(-20.24213027, result)
+        self.assertAlmostEqual(-21.48111534, result)

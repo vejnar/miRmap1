@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -85,8 +85,8 @@ class mmTargetScan(seed.mmSeed):
                 seq_down = self.target_seq[end_site - 1 + tts.down_shift : min(self.len_target_seq, end_site + ca_window_length - 1 + tts.down_shift)]
                 wup = tts.ca_weights_up[len(tts.ca_weights_up) - len(seq_up):]
                 wdn = tts.ca_weights_down[:len(seq_down)]
-                content = sum(map(operator.div, map(binarize, seq_up), wup)) + sum(map(operator.div, map(binarize, seq_down), wdn))
-                content = content / (sum(map(operator.div, [1.]*len(wup), wup)) + sum(map(operator.div, [1.]*len(wdn), wdn)))
+                content = sum(map(operator.truediv, map(binarize, seq_up), wup)) + sum(map(operator.truediv, map(binarize, seq_down), wdn))
+                content = content / (sum(map(operator.truediv, [1.]*len(wup), wup)) + sum(map(operator.truediv, [1.]*len(wdn), wdn)))
                 if with_correction:
                     self.tgs_aus.append(content * tts.ca_fc_slope + tts.ca_fc_intercept - tts.fc_mean)
                 else:

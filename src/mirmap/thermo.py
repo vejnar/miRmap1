@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -48,6 +48,8 @@ class mmThermo(seed.mmSeed):
             if_rna = librna
         elif hasattr(self, 'libs') and 'rna' in self.libs.libs:
             if_rna = self.libs.get_library_link('rna')
+        elif hasattr(self, 'exe_path'):
+            if_rna = if_exe_rna.RNAvienna(exe_path=self.exe_path)
         else:
             if_rna = if_exe_rna.RNAvienna()
         if mirna_start_pairing is None:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2011-2013 Charles E. Vejnar
+# Copyright (C) 2011-2022 Charles E. Vejnar
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -195,20 +195,20 @@ class Phast(object):
         if tree is not None:
             f.contents.tree = self._library.tr_new_from_string(tree)
         # Substitution model
-        f.contents.subst_mod = self._library.tm_get_subst_mod_type(subst_model)
+        f.contents.subst_mod = self._library.tm_get_subst_mod_type(subst_model.encode('ascii'))
         # EM
         if use_em is True:
             f.contents.use_em = 1
         # MSA
         if aln_fname is not None and aln is None:
-            f.contents.msa_fname = aln_fname
+            f.contents.msa_fname = aln_fname.encode('utf-8')
             aln_file = if_clib_c.RegularFile(aln_fname, 'r')
         elif aln_fname is None and aln is not None:
             aln_file = if_clib_c.InMemoryFile(aln)
         if aln_format == 'MAF':
             raise NotImplementedError()
         else:
-            f.contents.msa = self._library.msa_new_from_file_define_format(aln_file.file, self._enum_msa_format_types[aln_format], 'ACGT')
+            f.contents.msa = self._library.msa_new_from_file_define_format(aln_file.file, self._enum_msa_format_types[aln_format], b'ACGT')
         aln_file.close()
         # Output
         f.contents.output_fname_root = None
@@ -217,7 +217,7 @@ class Phast(object):
         self._library.run_phyloFit(f)
         # Output
         result = {}
-        trees = self._library.lol_find_list(f.contents.results, 'tree', self._enum_list_element_type['CHAR_LIST'])
+        trees = self._library.lol_find_list(f.contents.results, b'tree', self._enum_list_element_type['CHAR_LIST'])
         result['tree'] = cast(self._library.lst_get_ptr_non_inline(trees, 0), c_char_p).value
         # Cleaning
         if use_mem_handler:
@@ -235,15 +235,18 @@ class Phast(object):
         p.contents.results = self._library.lol_new(20)
         p.contents.method = self._enum_method_types[method]
         p.contents.mode = self._enum_mode_types[mode]
-        p.contents.mod_fname = mod_fname
-        p.contents.msa_fname = aln_fname
+        p.contents.mod_fname = mod_fname.encode('utf-8')
+        if aln_fname is None:
+            p.contents.msa_fname = None
+        else:
+            p.contents.msa_fname = aln_fname.encode('utf-8')
         # GFF
         if gff_fname:
-            gff_f = self._library.fopen_fname(gff_fname, 'r')
+            gff_f = self._library.fopen_fname(gff_fname, b'r')
             p.contents.feats = self._library.gff_read_set(gff_f)
             self._libc.fclose(gff_f)
         # Model
-        model_f = self._library.fopen_fname(p.contents.mod_fname, 'r')
+        model_f = self._library.fopen_fname(p.contents.mod_fname, b'r')
         p.contents.mod = self._library.tm_new_from_file(model_f, 1)
         self._libc.fclose(model_f)
         # MSA
@@ -255,7 +258,7 @@ class Phast(object):
             raise NotImplementedError()
             #p.contents.msa = self._library.maf_read_cats(msa_f, None, 1, None, None, None, -1, 1, None, 0, 0, None)
         else:
-            p.contents.msa = self._library.msa_new_from_file_define_format(aln_file.file, self._enum_msa_format_types[aln_format], 'ACGT')
+            p.contents.msa = self._library.msa_new_from_file_define_format(aln_file.file, self._enum_msa_format_types[aln_format], b'ACGT')
         aln_file.close()
         # Branch
         if branch is not None:
@@ -270,7 +273,7 @@ class Phast(object):
         # Call phyloP
         self._library.phyloP(p)
         # Output
-        pvals = self._library.lol_find_list(p.contents.results, 'pval.cons', self._enum_list_element_type['DBL_LIST'])
+        pvals = self._library.lol_find_list(p.contents.results, b'pval.cons', self._enum_list_element_type['DBL_LIST'])
         pval = self._library.lst_get_dbl_non_inline(pvals, 0)
         # Cleaning
         if use_mem_handler:
