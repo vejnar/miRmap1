@@ -172,7 +172,7 @@ def main(argv=None):
     # Predictions
     if args.num_worker > 1:
         pool = multiprocessing.Pool(args.num_worker)
-        tsp_results = pool.map_async(predict_on_mim, itertools.product(mirnas.items(), transcripts.items()), chunksize=5).get(1e+10)
+        tsp_results = pool.map_async(predict_on_mim, itertools.product(mirnas.items(), transcripts.items()), chunksize=5).get(1e+9)
         pool.close()
     else:
         tsp_results = map(predict_on_mim, itertools.product(mirnas.items(), transcripts.items()))
