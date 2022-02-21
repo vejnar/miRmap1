@@ -62,6 +62,38 @@ def remove_gap_column(aln):
     return clean_aln
 
 class mmEvolution(seed.mmSeed):
+    def set_site_alns(self, aln_fname, aln, aln_alphabet, motif_def, motif_upstream_extension, motif_downstream_extension):
+        # Load alignment and remove gaps
+        if aln_fname:
+            seqs = utils.load_fasta(aln_fname, upper=True)
+        else:
+            seqs = utils.load_fasta(aln, as_string=True, upper=True)
+        # First sequence is reference
+        self.ref_species = list(seqs.keys())[0]
+        ref_seq_coords = get_coord_vec(seqs[self.ref_species], aln_alphabet)
+        # Site alignments
+        self.site_alns = []
+        self.site_aln_motifs = []
+        for its in range(len(self.end_sites)):
+            end_site = self.end_sites[its]
+            # Motif
+            # start_motif and end_motif are sequence coordinates => 1-based
+            start_motif, end_motif = seed.get_motif_coordinates(end_site, motif_def, self.pairings[its], motif_upstream_extension, motif_downstream_extension, self.min_target_length)
+            motif = self.target_seq[start_motif-1:end_motif].replace('U', 'T')
+            # Extract alignment
+            start_motif_in_aln = ref_seq_coords[start_motif-1]
+            end_motif_in_aln = ref_seq_coords[end_motif-1]
+            partial_seqs = collections.OrderedDict()
+            with_motifs = set()
+            for seq_name, seq in seqs.items():
+                aln_seq = seq[start_motif_in_aln - 1:end_motif_in_aln]
+                if len(aln_seq) != aln_seq.count('-'):
+                    partial_seqs[seq_name] = aln_seq
+                    if motif == utils.clean_seq(aln_seq, aln_alphabet):
+                        with_motifs.add(seq_name)
+            self.site_alns.append(remove_gap_column(partial_seqs))
+            self.site_aln_motifs.append(with_motifs)
+
     def eval_cons_bls(self, aln_fname=None, aln=None, aln_format=None, aln_alphabet=None, subst_model=None, tree=None, fitting_tree=None, use_em=None, libphast=None, pathphast=None, motif_def=None, motif_upstream_extension=None, motif_downstream_extension=None):
         """Computes the Branch Length Score (*BLS*).
 
@@ -123,30 +155,15 @@ class mmEvolution(seed.mmSeed):
         if motif_downstream_extension is None:
             motif_downstream_extension = 0
         fitting_tree_done = False
-        # Load alignment
-        if aln_fname:
-            seqs = utils.load_fasta(aln_fname, upper=True)
-        else:
-            seqs = utils.load_fasta(aln, as_string=True, upper=True)
-        seqs_cleaned = {}
-        for seq_name, seq in seqs.items():
-            seqs_cleaned[seq_name] = utils.clean_seq(seq, aln_alphabet)
+        # Get alignments
+        if hasattr(self, 'site_alns') is False:
+            self.set_site_alns(aln_fname, aln, aln_alphabet, motif_def, motif_upstream_extension, motif_downstream_extension)
         # Reset
         self.cons_blss = []
         # Compute
         for its in range(len(self.end_sites)):
-            end_site = self.end_sites[its]
-            # Motif
-            # start_motif and end_motif are sequence coordinates => 1-based
-            start_motif, end_motif = seed.get_motif_coordinates(end_site, motif_def, self.pairings[its], motif_upstream_extension, motif_downstream_extension, self.min_target_length)
-            motif = self.target_seq[start_motif-1:end_motif].replace('U', 'T')
-            # Species with seed(s)
-            species_with_seed = []
-            for seq_name, seq in seqs_cleaned.items():
-                if seq.find(motif) != -1:
-                    species_with_seed.append(seq_name)
             # BLS
-            if len(species_with_seed) > 1:
+            if self.ref_species in self.site_aln_motifs[its] and len(self.site_aln_motifs[its]) > 1:
                 # Fitting tree if necessary
                 if fitting_tree_done is False:
                     if fitting_tree:
@@ -159,7 +176,7 @@ class mmEvolution(seed.mmSeed):
                     fitting_tree_done = True
                 # Compute BLS
                 dtree = dendropy.Tree.get_from_string(fitted_tree, schema='newick', preserve_underscores=True)
-                dtree.retain_taxa_with_labels(species_with_seed)
+                dtree.retain_taxa_with_labels(self.site_aln_motifs[its])
                 self.cons_blss.append(sum([edge.length for edge in dtree.postorder_edge_iter()][:-1]))
             else:
                 self.cons_blss.append(0.)
@@ -224,47 +241,22 @@ class mmEvolution(seed.mmSeed):
             motif_upstream_extension = 0
         if motif_downstream_extension is None:
             motif_downstream_extension = 0
-        # Load alignment and remove gaps
-        if aln_fname:
-            seqs = utils.load_fasta(aln_fname, upper=True)
-        else:
-            seqs = utils.load_fasta(aln, as_string=True, upper=True)
-        seqs_cleaned = {}
-        seqs_coords = {}
-        for seq_name, seq in seqs.items():
-            seqs_cleaned[seq_name] = utils.clean_seq(seq, aln_alphabet)
-            seqs_coords[seq_name] = get_coord_vec(seq, aln_alphabet)
-        ref_species = list(seqs.keys())[0]
+        # Get alignments
+        if hasattr(self, 'site_alns') is False:
+            self.set_site_alns(aln_fname, aln, aln_alphabet, motif_def, motif_upstream_extension, motif_downstream_extension)
         # Reset
         self.selec_phylops = []
         # Compute
         for its in range(len(self.end_sites)):
-            end_site = self.end_sites[its]
-            # Motif
-            # start_motif and end_motif are sequence coordinates => 1-based
-            start_motif, end_motif = seed.get_motif_coordinates(end_site, motif_def, self.pairings[its], motif_upstream_extension, motif_downstream_extension, self.min_target_length)
-            motif = self.target_seq[start_motif-1:end_motif].replace('U', 'T')
-            # Species with seed(s)
-            species_with_seed = []
-            for seq_name, seq in seqs_cleaned.items():
-                if seq.upper().find(motif) != -1:
-                    species_with_seed.append(seq_name)
             # phyloP
-            pval = 1.0
-            if len(species_with_seed) > 1:
+            if self.ref_species in self.site_aln_motifs[its] and len(self.site_aln_motifs[its]) > 1:
                 # Extract alignment
-                start_motif_in_aln = seqs_coords[ref_species][start_motif-1]
-                end_motif_in_aln = seqs_coords[ref_species][end_motif-1]
-                partial_seqs = collections.OrderedDict()
-                for seq_name, seq in seqs.items():
-                    if seq_name in species_with_seed:
-                        partial_seqs[seq_name] = seq[start_motif_in_aln - 1:end_motif_in_aln]
-                partial_seqs = remove_gap_column(partial_seqs)
-                aln = '\n'.join(['> %s\n%s'%(seq_name, seq) for seq_name, seq in partial_seqs.items()])
+                aln = '\n'.join([f'> {seq_name}\n{seq}' for seq_name, seq in self.site_alns[its].items()])
                 if aln_quality(aln):
                     # Compute p-value
-                    pval = if_phast.phylop(method=method, mode=mode, mod_fname=mod_fname, aln=aln, aln_format='FASTA')
-            self.selec_phylops.append(pval)
+                    self.selec_phylops.append(if_phast.phylop(method=method, mode=mode, mod_fname=mod_fname, aln=aln, aln_format='FASTA'))
+            else:
+                self.selec_phylops.append(1.)
 
     def get_cons_bls(self, method=None):
         """Branch Length Score (*BLS*) score with default parameters.
