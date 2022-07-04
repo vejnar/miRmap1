@@ -9,26 +9,21 @@
 
 """Probability based on binomial distribution feature."""
 
-import functools
+import math
 
 from . import seed
 from . import prob
 
-def factorial(n):
-    if n < 2: return 1
-    return functools.reduce(lambda x, y: x*y, range(2, int(n)+1))
-
-def n_choose_k(n, k):
-    return (factorial(n)/(factorial(k)*factorial(n-k)))
-
-def binom_pmf(k, n, p):
-    return n_choose_k(n, k)*(p**k)*((1-p)**(n-k))
-
-def binom_cdf(k, n, p):
-    cump = 0.
-    for ik in range(k+1):
-        cump += binom_pmf(ik, n, p)
-    return cump
+def binomial_cdf(k, n, p):
+    # Exact solution using log to avoid float overflow errors (https://stackoverflow.com/a/45869209)
+    cdf = 0
+    b = 0
+    for k in range(k+1):
+        if k > 0:
+            b += math.log(n-k+1) - math.log(k)
+        log_pmf_k = b + k * math.log(p) + (n-k) * math.log(1-p)
+        cdf += math.exp(log_pmf_k)
+    return cdf
 
 class mmProbBinomial(seed.mmSeed):
     def eval_prob_binomial(self, markov_order=None, alphabet=None, transitions=None, motif_def=None, motif_upstream_extension=None, motif_downstream_extension=None):
@@ -69,7 +64,7 @@ class mmProbBinomial(seed.mmSeed):
             start_motif, end_motif = seed.get_motif_coordinates(end_site, motif_def, self.pairings[its], motif_upstream_extension, motif_downstream_extension, self.min_target_length)
             motif = self.target_seq[start_motif-1:end_motif]
             #self.prob_binomials.append(1. - sp.stats.binom.cdf(self.target_seq.count(motif), self.len_target_seq-len(motif)+1, prob_motif(motif, alphabet, markov_order, transitions)))
-            self.prob_binomials.append(1. - binom_cdf(self.target_seq.count(motif), self.len_target_seq-len(motif)+1, prob.prob_motif(motif, alphabet, markov_order, transitions)))
+            self.prob_binomials.append(1. - binomial_cdf(self.target_seq.count(motif), self.len_target_seq-len(motif)+1, prob.prob_motif(motif, alphabet, markov_order, transitions)))
 
     def get_prob_binomial(self, method=None):
         """*P.over binomial* score with default parameters.
