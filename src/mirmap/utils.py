@@ -21,11 +21,11 @@ def grouper(n, iterable, fillvalue=None):
 def flatten(l1d):
     return list(itertools.chain.from_iterable(l1d))
 
-def clean_seq(seq, alphabet):
+def clean_seq(seq, alphabet, replace_string):
     alphabet_real = list(set(seq))
     for l in alphabet_real:
         if l not in alphabet:
-            seq = seq.replace(l, '')
+            seq = seq.replace(l, replace_string)
     return seq
 
 def load_fasta(fasta, as_string=None, upper=False):

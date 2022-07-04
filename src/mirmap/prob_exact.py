@@ -66,7 +66,7 @@ class mmProbExact(seed.mmSeed):
             # start_motif and end_motif are sequence coordinates => 1-based
             start_motif, end_motif = seed.get_motif_coordinates(end_site, motif_def, self.pairings[its], motif_upstream_extension, motif_downstream_extension, self.min_target_length)
             motif = self.target_seq[start_motif-1:end_motif]
-            self.prob_exacts.append(if_spatt.get_exact_prob(utils.clean_seq(motif, alphabet), self.target_seq.count(motif), self.len_target_seq, alphabet, transitions, markov_order, 'o'))
+            self.prob_exacts.append(if_spatt.get_exact_prob(utils.clean_seq(motif, alphabet, ''), self.target_seq.count(motif), self.len_target_seq, alphabet, transitions, markov_order, 'o'))
 
     def get_prob_exact(self, method=None):
         """*P.over exact* score with default parameters.
