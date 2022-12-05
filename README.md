@@ -6,7 +6,7 @@ See [miRmap web site](https://mirmap.ezlab.org) for installation and usage detai
 
 ## Download
 
-See [tags](/../../tags) page.
+See [refs](https://git.sr.ht/~vejnar/miRmap/refs) page.
 
 ## License
 
