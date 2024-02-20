@@ -68,9 +68,6 @@ class mmEvolution(seed.mmSeed):
             seqs = utils.load_fasta(aln_fname, upper=True)
         else:
             seqs = utils.load_fasta(aln, as_string=True, upper=True)
-        # Replace non-alphabet nucleotide
-        for seq_name in seqs.keys():
-            seqs[seq_name] = utils.clean_seq(seqs[seq_name], aln_alphabet, 'N')
         # First sequence is reference
         self.ref_species = list(seqs.keys())[0]
         ref_seq_coords = get_coord_vec(seqs[self.ref_species], aln_alphabet)
@@ -92,7 +89,7 @@ class mmEvolution(seed.mmSeed):
                 aln_seq = seq[start_motif_in_aln - 1:end_motif_in_aln]
                 if len(aln_seq) != aln_seq.count('-'):
                     partial_seqs[seq_name] = aln_seq
-                    if motif == aln_seq:
+                    if motif == utils.clean_seq(aln_seq, aln_alphabet, 'N'):
                         with_motifs.add(seq_name)
             self.site_alns.append(remove_gap_column(partial_seqs))
             self.site_aln_motifs.append(with_motifs)
