@@ -12,4 +12,4 @@ See [refs](https://git.sr.ht/~vejnar/miRmap/refs) page.
 
 The *miRmap* library is distributed under the GNU GPL v3 (see /LICENSE).
 
-Copyright (C) 2011-2022 Charles E. Vejnar
+Copyright (C) 2011-2024 Charles E. Vejnar
